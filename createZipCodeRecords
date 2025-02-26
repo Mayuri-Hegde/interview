@@ -1,0 +1,93 @@
+public class createZipCodeRecords {
+    
+   	@InvocableMethod(label='Parse Postal Code Data')
+    public static List<FlowOutput> parseData(List<String> jsonInputs) {
+        List<FlowOutput> flowOutputs = new List<FlowOutput>();
+        
+        for (String jsonString : jsonInputs) {
+            jsonString = jsonString.replaceAll('<.*?>', '');
+            System.debug('@jsonString@' + jsonString);
+            
+            try {
+                Map<String, Object> data = (Map<String, Object>) JSON.deserializeUntyped(jsonString);
+                
+                String country = (String) data.get('country');
+                String countryAbbreviation = (String) data.get('countryx20abbreviation');
+                String postCode = (String) data.get('postx20code');
+                
+                List<Place> places = new List<Place>();
+                List<Object> placesData = (List<Object>) data.get('places');
+                
+                if (placesData != null) {
+                    for (Object placeData : placesData) {
+                        Map<String, Object> placeMap = (Map<String, Object>) placeData;
+                        Place place = new Place();
+                        place.placeName = (String) placeMap.get('placex20name');
+                        place.longitude = (String) placeMap.get('longitude');
+                        place.state = (String) placeMap.get('state');
+                        place.state_abbreviation = (String) placeMap.get('statex20abbreviation');
+                        place.latitude = (String) placeMap.get('latitude');
+                        places.add(place);
+                    }
+                }
+                
+                FlowOutput output = new FlowOutput();
+                output.country = country;
+                output.countryAbbreviation = countryAbbreviation;
+                output.postCode = postCode;
+                
+                String formattedPlaces = '';
+                for (Place p : places) {
+                    formattedPlaces += 'Place Name: ' + p.placeName + '\n';
+                    formattedPlaces += 'Longitude: ' + p.longitude + '\n';
+                    formattedPlaces += 'State: ' + p.state + '\n';
+                    formattedPlaces += 'State Abbreviation: ' + p.state_abbreviation + '\n';
+                    formattedPlaces += 'Latitude: ' + p.latitude + '\n\n';
+                    System.debug('@formattedPlaces@'+formattedPlaces);
+                }
+                output.placesFormatted = formattedPlaces;
+                
+                flowOutputs.add(output);
+                
+            } catch (Exception e) {
+                System.debug('Error parsing JSON: ' + e.getMessage());
+                FlowOutput errorOutput = new FlowOutput();
+                errorOutput.errorMessage = 'Error processing input: ' + e.getMessage();
+                flowOutputs.add(errorOutput);
+            }
+        }
+        
+        return flowOutputs;
+    }
+    
+    public class Place {
+        public String placeName;
+        public String longitude;
+        public String state;
+        public String state_abbreviation;
+        public String latitude;
+        
+        public String getPlace_name() { return placeName; }
+        public String getLongitude() { return longitude; }
+        public String getState() { return state; }
+        public String getState_abbreviation() { return state_abbreviation; }
+        public String getLatitude() { return latitude; }
+    }
+    
+    public class FlowOutput {
+        @InvocableVariable(required=true)
+        public String country;
+        
+        @InvocableVariable(required=true)
+        public String countryAbbreviation;
+        
+        @InvocableVariable(required=true)
+        public String postCode;
+        
+        @InvocableVariable
+        public String placesFormatted;
+        
+        @InvocableVariable
+        public String errorMessage;
+    }
+}
