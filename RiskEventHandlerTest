@@ -1,0 +1,60 @@
+@isTest
+private class RiskEventHandlerTest {
+
+    @testSetup
+    static void setupTestData() {
+        User testUser = new User(
+            Alias = 'SHegde',
+            Email = 'shinoki@kuwa.com',
+            LastName = 'brainee',
+            ProfileId = [SELECT Id FROM Profile WHERE Name = 'Standard User' LIMIT 1].Id,
+            UserName = 'shinokikuwa@wakawka.com',
+            TimeZoneSidKey = 'America/Los_Angeles',
+            LocaleSidKey = 'en_US',
+            EmailEncodingKey = 'UTF-8',
+            LanguageLocaleKey = 'en_US'
+        );
+        insert testUser;
+
+        Account accHigh = new Account(Name = 'High Risk Account', Risk__c = 'High');
+        insert accHigh;
+
+        Account accLow = new Account(Name = 'Low Risk Account', Risk__c = 'Low');
+        insert accLow;
+    }
+
+    @isTest
+    static void testHandleRiskHighEvent() {
+        Account acc = [SELECT Id, Name, OwnerId FROM Account WHERE Name = 'High Risk Account' LIMIT 1];
+        
+        Risk_Event__e riskEvent = new Risk_Event__e(
+            Account_Id__c = acc.Id
+        );
+
+        Database.SaveResult result = EventBus.publish(riskEvent);
+        System.assert(result.isSuccess(), 'Platform event publishing failed');
+
+        Test.startTest();
+        RiskEventHandler.handleRiskHighEvent(new List<Risk_Event__e>{riskEvent});
+        Test.stopTest();
+        List<Case> cases = [SELECT Id, OwnerId, AccountId FROM Case WHERE AccountId = :acc.Id];
+        System.assert(cases.size() > 0, 'No case was created for the Risk Event');
+        Account account = [SELECT OwnerId FROM Account WHERE Id = :acc.Id];
+        System.assertNotEquals(cases[0].OwnerId, account.OwnerId, 'Case owner should not be the same as Account owner');
+    }
+
+    @isTest
+    static void testHandleRiskHighEventNoCaseCreatedIfNotHighRisk() {
+        Account acc = [SELECT Id, Name, OwnerId FROM Account WHERE Name = 'Low Risk Account' LIMIT 1];
+        Risk_Event__e riskEvent = new Risk_Event__e(
+            Account_Id__c = acc.Id
+        );
+        Database.SaveResult result = EventBus.publish(riskEvent);
+        System.assert(result.isSuccess(), 'Platform event publishing failed');
+        Test.startTest();
+        RiskEventHandler.handleRiskHighEvent(new List<Risk_Event__e>{riskEvent});
+        Test.stopTest();
+        List<Case> cases = [SELECT Id FROM Case WHERE AccountId = :acc.Id];
+        System.assertEquals(cases.size(), 0, 'A case was created unexpectedly for the Low Risk Event');
+    }
+}
