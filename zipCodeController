@@ -1,0 +1,52 @@
+public class zipCodeController {
+    public class Place {
+        public String placeName { get; set; }
+        public String longitude { get; set; }
+        public String state { get; set; }
+        public String stateAbbreviation { get; set; }
+        public String latitude { get; set; }
+        public Place(String placeName, String longitude, String state, String stateAbbreviation, String latitude) {
+            this.placeName = placeName;
+            this.longitude = longitude;
+            this.state = state;
+            this.stateAbbreviation = stateAbbreviation;
+            this.latitude = latitude;
+        }
+    }
+    @AuraEnabled(cacheable=true)
+    public static String getZipCodeData(String countryCode, String postalCode) {
+        String endpoint = 'callout:ZipCode/' + countryCode + '/' + postalCode;
+        HttpRequest req = new HttpRequest();
+        req.setEndpoint(endpoint);
+        req.setMethod('GET');
+        req.setTimeout(60000);
+        Http http = new Http();
+        HttpResponse res = http.send(req);
+        if (res.getStatusCode() == 200) {
+            Map<String, Object> responseMap = (Map<String, Object>) JSON.deserializeUntyped(res.getBody());
+            String country = (String) responseMap.get('country');
+            String countryAbbreviation = (String) responseMap.get('country abbreviation');
+            String postCode = (String) responseMap.get('post code');
+            List<Object> placesList = (List<Object>) responseMap.get('places');
+            List<Place> places = new List<Place>();
+			for (Object placeObj : placesList) {
+                Map<String, Object> placeMap = (Map<String, Object>) placeObj;
+                String placeName = (String) placeMap.get('place name');
+                String longitude = (String) placeMap.get('longitude');
+                String state = (String) placeMap.get('state');
+                String stateAbbreviation = (String) placeMap.get('state abbreviation');
+                String latitude = (String) placeMap.get('latitude');
+                places.add(new Place(placeName, longitude, state, stateAbbreviation, latitude));
+            }
+            Map<String, Object> result = new Map<String, Object>();
+            result.put('country', country);
+            result.put('countryAbbreviation', countryAbbreviation);
+            result.put('postCode', postCode);
+            result.put('places', places);
+            System.debug('result'+result);
+            return JSON.serialize(result);
+        } else {
+            throw new AuraHandledException('Error: ' + res.getStatusCode());
+        }
+    }
+}
