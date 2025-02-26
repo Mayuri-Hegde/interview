@@ -1,0 +1,40 @@
+@isTest
+public class zipCodeControllerTest {
+
+    // Mock class that implements HttpCalloutMock to simulate the HTTP response
+    public class MockHttpResponseGenerator implements HttpCalloutMock {
+        public HttpResponse respond(HttpRequest req) {
+            // Create a mock HTTP response
+            HttpResponse response = new HttpResponse();
+            response.setStatusCode(200);
+            response.setBody('{"country": "India", "country abbreviation": "IN", "post code": "110001", "places": [{"place name": "Janpath", "longitude": "77.2167", "state": "New Delhi", "state abbreviation": "DL", "latitude": "28.6333"}, {"place name": "Rail Bhawan", "longitude": "77.2167", "state": "New Delhi", "state abbreviation": "DL", "latitude": "28.6333"}]}');
+            return response;
+        }
+    }
+
+    // Test method to test the getZipCodeData function
+    @isTest
+    public static void testGetZipCodeData() {
+        // Setup the mock response
+        Test.setMock(HttpCalloutMock.class, new MockHttpResponseGenerator());
+        
+        // Call the method
+        String countryCode = 'IN';
+        String postalCode = '110001';
+        
+        String result = zipCodeController.getZipCodeData(countryCode, postalCode);
+
+        Map<String, Object> resultMap = (Map<String, Object>) JSON.deserializeUntyped(result);
+
+        System.assertEquals('India', resultMap.get('country'));
+        System.assertEquals('IN', resultMap.get('countryAbbreviation'));
+        System.assertEquals('110001', resultMap.get('postCode'));
+
+        List<Object> places = (List<Object>) resultMap.get('places');
+        System.assertEquals(2, places.size(), 'The number of places should be 2.');
+
+        Map<String, Object> firstPlace = (Map<String, Object>) places[0];
+        Map<String, Object> secondPlace = (Map<String, Object>) places[1];
+        
+    }
+}
