@@ -1,0 +1,17 @@
+public class AccountRiskTriggerHandler {
+    public static void handleAccountRiskChange(List<Account> newAccounts, Map<Id, Account> oldMap) {
+        List<Risk_Event__e> eventsToPublish = new List<Risk_Event__e>();
+        for (Account acc : newAccounts) {
+            Account oldAcc = oldMap.get(acc.Id);
+            if (acc.Risk__c == 'High' && acc.Risk__c != oldAcc.Risk__c) {
+                Risk_Event__e riskEvent = new Risk_Event__e();
+                riskEvent.Account_Id__c = acc.Id;
+                riskEvent.Account_Name__c = acc.Name;
+                eventsToPublish.add(riskEvent);
+            }
+        }        
+        if (!eventsToPublish.isEmpty()) {
+            EventBus.publish(eventsToPublish);
+        }
+    }
+}
