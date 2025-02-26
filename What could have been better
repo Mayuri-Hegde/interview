@@ -1,0 +1,6 @@
+What could have been better?
+Instead of taking country code as input here I can create a custom Metdata using country and their country codes along with Postal codes. I could use the same metadata in both 
+flow and LWC Component. And in LWC and Flow the Country could have been a picklist field. But die to time constraint I couldn't use Custom Metadata.
+
+Could directly merge changes from the vs code to git, i had worked on it a long back so I did not get time to go through it so manually created the changes, If you want to see
+the working of the component I can share my Org credentials.
