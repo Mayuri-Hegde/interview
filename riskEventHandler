@@ -1,0 +1,20 @@
+public class riskEventHandler {
+    public static void handleRiskHighEvent(List<Risk_Event__e> events) {
+        List<Case> casesToInsert = new List<Case>();
+        for (Risk_Event__e event : events) {
+            Account relatedAccount = [SELECT Id, Name, OwnerId FROM Account WHERE Id = :event.Account_Id__c LIMIT 1];
+            Case newCase = new Case(
+                AccountId = relatedAccount.Id,
+                Origin = 'Platform Event',
+                Status = 'New',
+                Subject = 'High Risk Case: ' + relatedAccount.Name
+            );
+            User newCaseOwner = [SELECT Id FROM User WHERE Id != :relatedAccount.OwnerId LIMIT 1];
+            newCase.OwnerId = newCaseOwner.Id;
+            casesToInsert.add(newCase);
+        }        
+        if (!casesToInsert.isEmpty()) {
+            insert casesToInsert;
+        }
+    }
+}
