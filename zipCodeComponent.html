@@ -1,0 +1,60 @@
+<template>
+    <lightning-card title="ZipCode Details">
+        <lightning-input label="Country Code" value={countryCode} onchange={handleCountryChange}></lightning-input>
+        <lightning-input label="Postal Code" value={postalCode} onchange={handlePostalCodeChange}></lightning-input><br/>
+        <lightning-button label="Fetch Data" onclick={handleFetchData}></lightning-button><br/><br/>
+        <template if:true={isDataAvailable}>
+            <template if:false={showModal}>
+                <p><strong>Country:</strong> {countryData.country}</p>
+                <p><strong>Country Code:</strong> {countryData.countryAbbreviation}</p>
+                <p><strong>Post Code:</strong> {countryData.postCode}</p>
+                <br/>
+                <p><strong>Places:</strong></p>
+                <template for:each={places} for:item="place">
+                    <div key={place.placeName}>
+                        <p><strong>Place Name:</strong> {place.placeName}</p>
+                        <p><strong>Longitude:</strong> {place.longitude}</p>
+                        <p><strong>State:</strong> {place.state}</p>
+                        <p><strong>State Abbreviation:</strong> {place.stateAbbreviation}</p>
+                        <p><strong>Latitude:</strong> {place.latitude}</p><br/>
+                    </div> 
+                </template>
+                </template>
+                <template if:true={showModal}>
+                    <section role="dialog" tabindex="-1" aria-labelledby="modal-heading-01" aria-modal="true" aria-describedby="modal-content-id-1" class="slds-modal slds-fade-in-open">
+                        <div class="slds-modal__container">
+                            <header class="slds-modal__header">
+                                <button class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse" title="Close" onclick={handleCloseModal}>
+                                    <lightning-icon icon-name="utility:close"
+                                       alternative-text="close"
+                                       variant="inverse"
+                                       size="small" ></lightning-icon>
+                                    <span class="slds-assistive-text">Close</span>
+                                </button>
+                                <h2 id="modal-heading-01" class="slds-text-heading_medium slds-hyphenate">The US Zip Data</h2>
+                            </header>
+                            <div class="slds-modal__content slds-p-around_medium" id="modal-content-id-1">
+                                <template for:each={places} for:item="place">
+                                    <div key={place.placeName}>
+                                        <p><strong>Place Name:</strong> {place.placeName}</p>
+                                        <p><strong>Longitude:</strong> {place.longitude}</p>
+                                        <p><strong>State:</strong> {place.state}</p>
+                                        <p><strong>State Abbreviation:</strong> {place.stateAbbreviation}</p>
+                                        <p><strong>Latitude:</strong> {place.latitude}</p>
+                                    </div>
+                                </template>
+                            </div>
+                            <footer class="slds-modal__footer">
+                                <button class="slds-button slds-button_neutral" onclick={handleCloseModal}>Cancel</button>
+                            </footer>   
+                        </div>
+                    </section>
+                    <div class="slds-backdrop slds-backdrop_open"></div>
+                </template>
+        </template>
+
+        <template if:false={isDataAvailable}>
+            <p>No data available. Please try again.</p>
+        </template>
+    </lightning-card>
+</template>
