@@ -1,0 +1,43 @@
+@isTest
+private class AccountHandlerTest {
+
+    @testSetup
+    static void setupTestData() {
+        User testUser = new User(
+            Alias = 'Sapt',
+            Email = 'shamin@amina.com',
+            LastName = 'aptapt',
+            ProfileId = [SELECT Id FROM Profile WHERE Name = 'Standard User' LIMIT 1].Id,
+            UserName = 'shana@mina.com',
+            TimeZoneSidKey = 'America/Los_Angeles',
+            LocaleSidKey = 'en_US',
+            EmailEncodingKey = 'UTF-8',
+            LanguageLocaleKey = 'en_US'
+        );
+        insert testUser;
+
+        Account acc = new Account(Name = 'Test Account Low', Risk__c = 'Low');
+        insert acc;
+
+        Account accMedium = new Account(Name = 'Test Account Medium', Risk__c = 'Medium');
+        insert accMedium;
+    }
+
+    @isTest
+    static void testAccountRiskChangeToHigh() {
+        Account acc = [SELECT Id, Risk__c FROM Account WHERE Risk__c = 'Low' LIMIT 1];
+        
+        acc.Risk__c = 'High';
+        update acc;
+    }
+
+    @isTest
+    static void testAccountRiskChangeToNonHigh() {
+
+        Account acc = [SELECT Id, Risk__c FROM Account WHERE Risk__c = 'Medium' LIMIT 1];
+        acc.Risk__c = 'Medium';
+        update acc;
+
+        
+    }
+}
